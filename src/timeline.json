@@ -1,0 +1,169 @@
+{
+  "fps": 30,
+  "duration": 4.0,
+  "keys": [
+    {
+      "t": 0.12,
+      "hand": "L",
+      "finger": 1,
+      "row": 2,
+      "kind": "key"
+    },
+    {
+      "t": 0.2185,
+      "hand": "R",
+      "finger": 0,
+      "row": 0,
+      "kind": "key"
+    },
+    {
+      "t": 0.3528,
+      "hand": "R",
+      "finger": 2,
+      "row": 1,
+      "kind": "key"
+    },
+    {
+      "t": 0.456,
+      "hand": "L",
+      "finger": 2,
+      "row": 1,
+      "kind": "key"
+    },
+    {
+      "t": 0.5712,
+      "hand": "R",
+      "finger": 0,
+      "row": 2,
+      "kind": "key"
+    },
+    {
+      "t": 0.7038,
+      "hand": "L",
+      "finger": 1,
+      "row": 1,
+      "kind": "key"
+    },
+    {
+      "t": 0.8429,
+      "hand": "R",
+      "finger": -1,
+      "row": 0,
+      "kind": "space"
+    },
+    {
+      "t": 0.9556,
+      "hand": "R",
+      "finger": 0,
+      "row": 1,
+      "kind": "key"
+    },
+    {
+      "t": 1.0956,
+      "hand": "L",
+      "finger": 1,
+      "row": 1,
+      "kind": "key"
+    },
+    {
+      "t": 1.2104,
+      "hand": "R",
+      "finger": 2,
+      "row": 1,
+      "kind": "key"
+    },
+    {
+      "t": 1.3369,
+      "hand": "L",
+      "finger": 0,
+      "row": 1,
+      "kind": "key"
+    },
+    {
+      "t": 1.98,
+      "hand": "R",
+      "finger": 2,
+      "row": 1,
+      "kind": "key"
+    },
+    {
+      "t": 2.1178,
+      "hand": "L",
+      "finger": 2,
+      "row": 1,
+      "kind": "key"
+    },
+    {
+      "t": 2.2473,
+      "hand": "R",
+      "finger": 2,
+      "row": 1,
+      "kind": "key"
+    },
+    {
+      "t": 2.3628,
+      "hand": "R",
+      "finger": 1,
+      "row": 1,
+      "kind": "key"
+    },
+    {
+      "t": 2.4513,
+      "hand": "L",
+      "finger": 1,
+      "row": 0,
+      "kind": "key"
+    },
+    {
+      "t": 2.6205,
+      "hand": "R",
+      "finger": -1,
+      "row": 0,
+      "kind": "space"
+    },
+    {
+      "t": 2.7892,
+      "hand": "R",
+      "finger": 1,
+      "row": 1,
+      "kind": "key"
+    },
+    {
+      "t": 2.9148,
+      "hand": "L",
+      "finger": 1,
+      "row": 1,
+      "kind": "key"
+    },
+    {
+      "t": 3.0142,
+      "hand": "R",
+      "finger": 2,
+      "row": 2,
+      "kind": "key"
+    },
+    {
+      "t": 3.1121,
+      "hand": "L",
+      "finger": 0,
+      "row": 1,
+      "kind": "key"
+    },
+    {
+      "t": 3.42,
+      "hand": "R",
+      "finger": 2,
+      "row": 1,
+      "kind": "enter"
+    }
+  ],
+  "pause": [
+    1.42,
+    1.98
+  ],
+  "enter": 3.42,
+  "blinks": [
+    1.66,
+    3.74
+  ]
+}
