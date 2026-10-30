@@ -3,7 +3,7 @@
 
 import { hash, noise1 } from "../kit/math";
 import { Ctx } from "../kit/pen";
-import { grainTile, offscreen, paper } from "../kit/texture";
+import { post } from "../kit/post";
 import { H, LAMP, LAPTOP, W } from "./layout";
 import { drawLampShade, drawScreenEdge } from "./room";
 
@@ -128,55 +128,6 @@ const drawDust = (ctx: Ctx, t: number) => {
   ctx.restore();
 };
 
-/** Screen-space finishing: bloom, vignette, paper, grain, fades. */
-export const finish = (ctx: Ctx, frame: number, fade: number) => {
-  const canvas = ctx.canvas;
-
-  // bloom: a blurred copy screened on top gives the soft glowy look
-  const b = offscreen("bloom", W / 4, H / 4);
-  const bctx = b.getContext("2d")!;
-  bctx.globalCompositeOperation = "copy";
-  bctx.filter = "blur(6px) brightness(1.1)";
-  bctx.drawImage(canvas, 0, 0, W / 4, H / 4);
-  bctx.filter = "none";
-  ctx.save();
-  ctx.globalCompositeOperation = "screen";
-  ctx.globalAlpha = 0.1;
-  ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(b, 0, 0, W, H);
-  ctx.restore();
-
-  // vignette
-  ctx.save();
-  const v = ctx.createRadialGradient(W * 0.56, H * 0.48, H * 0.35, W * 0.56, H * 0.48, H * 1.05);
-  v.addColorStop(0, "rgba(20,10,8,0)");
-  v.addColorStop(1, "rgba(20,10,8,0.55)");
-  ctx.fillStyle = v;
-  ctx.fillRect(0, 0, W, H);
-  ctx.restore();
-
-  // paper texture
-  ctx.save();
-  ctx.globalCompositeOperation = "multiply";
-  ctx.drawImage(paper(W, H), 0, 0);
-  ctx.restore();
-
-  // film grain (changes every frame, very subtle)
-  ctx.save();
-  ctx.globalCompositeOperation = "overlay";
-  ctx.globalAlpha = 0.07;
-  const tile = grainTile(frame);
-  const ox = Math.floor(hash(frame, 1) * 256);
-  const oy = Math.floor(hash(frame, 2) * 256);
-  ctx.translate(-ox, -oy);
-  ctx.fillStyle = ctx.createPattern(tile, "repeat")!;
-  ctx.fillRect(0, 0, W + 256, H + 256);
-  ctx.restore();
-
-  if (fade < 1) {
-    ctx.save();
-    ctx.fillStyle = `rgba(8,5,4,${1 - fade})`;
-    ctx.fillRect(0, 0, W, H);
-    ctx.restore();
-  }
-};
+/** Screen-space finishing for this cut's look. */
+export const finish = (ctx: Ctx, frame: number, fade: number) =>
+  post(ctx, frame, fade, { bloom: 0.1, vignette: "20,10,8", vignetteAlpha: 0.55, paper: 1, grain: 0.07 });

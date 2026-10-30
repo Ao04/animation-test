@@ -13,6 +13,13 @@ export type Ctx = CanvasRenderingContext2D;
 export const INK = "#2a201c";
 export const LINE = 5;
 
+/** Current pen: each cut/art style sets its ink colour and line weight. */
+export const penStyle = { ink: INK, lw: LINE };
+export const setPen = (ink: string, lw: number) => {
+  penStyle.ink = ink;
+  penStyle.lw = lw;
+};
+
 export interface HandOpts {
   seed?: number;
   amp?: number; // wobble amplitude in px
@@ -88,7 +95,7 @@ export interface PaintOpts {
   lw?: number;
 }
 
-const paint = (ctx: Ctx, { fill, stroke = INK, lw = LINE }: PaintOpts) => {
+const paint = (ctx: Ctx, { fill, stroke = penStyle.ink, lw = penStyle.lw }: PaintOpts) => {
   if (fill) {
     ctx.fillStyle = fill;
     ctx.fill();
@@ -115,7 +122,7 @@ export const curve = (ctx: Ctx, pts: Pt[], opts: { lw?: number; color?: string; 
   const p = handify(pts, { seed: opts.seed ?? 5, amp: opts.amp ?? 0.6, step: 40 });
   ctx.beginPath();
   spline(ctx, p, false, 0.9);
-  paint(ctx, { fill: null, stroke: opts.color ?? INK, lw: opts.lw ?? LINE });
+  paint(ctx, { fill: null, stroke: opts.color ?? penStyle.ink, lw: opts.lw ?? penStyle.lw });
 };
 
 /** Hand-inked straight line. */
@@ -123,7 +130,7 @@ export const line = (ctx: Ctx, a: Pt, b: Pt, opts: { lw?: number; color?: string
   const p = handify([a, b], { seed: opts.seed ?? 11, amp: opts.amp ?? 1.2, step: 30 });
   ctx.beginPath();
   spline(ctx, p, false, 0.8);
-  paint(ctx, { fill: null, stroke: opts.color ?? INK, lw: opts.lw ?? LINE });
+  paint(ctx, { fill: null, stroke: opts.color ?? penStyle.ink, lw: opts.lw ?? penStyle.lw });
 };
 
 /** Hand-inked rectangle with softly rounded corners. */
@@ -162,7 +169,7 @@ export const box = (
  * with different widths can be passed; all outlines are drawn first so the
  * joints merge without inner seams.
  */
-export const tubes = (ctx: Ctx, segs: { pts: Pt[]; w: number }[], fill: string, lw = LINE, ink = INK) => {
+export const tubes = (ctx: Ctx, segs: { pts: Pt[]; w: number }[], fill: string, lw = penStyle.lw, ink = penStyle.ink) => {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   for (const pass of [0, 1]) {

@@ -1,6 +1,7 @@
 import React, { useLayoutEffect, useRef } from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { easeInOut, invLerp, lerp, smooth } from "./kit/math";
+import { INK, LINE, setPen } from "./kit/pen";
 import { offscreen } from "./kit/texture";
 import { drawLegs, drawUpperBody } from "./scene/character";
 import { H, W } from "./scene/layout";
@@ -11,6 +12,7 @@ import { drawChair, drawDesk, drawDeskLegs, drawDeskProps, drawLaptop, drawPoste
 export const drawFrame = (ctx: CanvasRenderingContext2D, frame: number, fps: number, total: number) => {
   const t = frame / fps;
   const pose = poseAt(t);
+  setPen(INK, LINE);
 
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalCompositeOperation = "source-over";

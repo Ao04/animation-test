@@ -66,6 +66,30 @@ export const springStep = (dt: number, freq = 6, damping = 0.45) => {
   return 1 - Math.exp(-damping * w * dt) * (Math.cos(wd * dt) + ((damping * w) / wd) * Math.sin(wd * dt));
 };
 
+/**
+ * Fingertip curve around a key press at d = t - tKey (seconds):
+ * lift (negative), strike, short hold, release with a tiny rebound.
+ */
+export const pressCurve = (d: number, lift: number, press: number) => {
+  if (d < -0.11 || d > 0.2) return 0;
+  if (d < -0.035) return -lift * easeOut(invLerp(-0.11, -0.035, d));
+  if (d < 0) return lerp(-lift, press, easeIn(invLerp(-0.035, 0, d)));
+  if (d < 0.04) return press;
+  const r = invLerp(0.04, 0.2, d);
+  return press * (1 - easeOut(r)) - Math.sin(r * Math.PI) * lift * 0.18;
+};
+
+/** Standard blink: fast close, short hold, slower open. Returns 0..1. */
+export const blinkCurve = (d: number) => {
+  if (d < 0 || d >= 0.2) return 0;
+  if (d < 0.05) return easeIn(d / 0.05);
+  if (d < 0.085) return 1;
+  return 1 - easeOut((d - 0.085) / 0.115);
+};
+
+/** 0 -> 1 -> 0 bump between a and b (smooth). */
+export const bump = (t: number, a: number, b: number) => Math.sin(clamp((t - a) / (b - a)) * Math.PI);
+
 /** Two-bone IK: returns the elbow position for a limb from `a` to target `c`. */
 export const ik2 = (a: Pt, c: Pt, l1: number, l2: number, bendSign: 1 | -1): Pt => {
   const d = Math.min(dist(a, c), l1 + l2 - 0.01);
