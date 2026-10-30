@@ -9,7 +9,20 @@ import { finish, lightAmbient, lightGlow, shadeCharacter } from "./scene/lightin
 import { poseAt } from "./scene/motion";
 import { drawChair, drawDesk, drawDeskLegs, drawDeskProps, drawLaptop, drawPoster, drawShelf, drawWall, drawWindow } from "./scene/room";
 
-export const drawFrame = (ctx: CanvasRenderingContext2D, frame: number, fps: number, total: number) => {
+export type CharacterDrawer = (ctx: CanvasRenderingContext2D, pose: ReturnType<typeof poseAt>) => void;
+
+const drawGirl: CharacterDrawer = (cc, pose) => {
+  drawLegs(cc, pose);
+  drawUpperBody(cc, pose);
+};
+
+export const drawFrame = (
+  ctx: CanvasRenderingContext2D,
+  frame: number,
+  fps: number,
+  total: number,
+  drawCharacter: CharacterDrawer = drawGirl,
+) => {
   const t = frame / fps;
   const pose = poseAt(t);
   setPen(INK, LINE);
@@ -43,8 +56,7 @@ export const drawFrame = (ctx: CanvasRenderingContext2D, frame: number, fps: num
   cc.setTransform(1, 0, 0, 1, 0, 0);
   cc.clearRect(0, 0, W, H);
   cc.setTransform(cam);
-  drawLegs(cc, pose);
-  drawUpperBody(cc, pose);
+  drawCharacter(cc, pose);
   shadeCharacter(cc);
 
   ctx.save();
