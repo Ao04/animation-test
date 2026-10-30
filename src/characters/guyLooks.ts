@@ -92,3 +92,8 @@ export const GUY_LOOKS: { id: string; look: GuyLook }[] = [
     },
   },
 ];
+
+// Chosen direction: short side part (flat, reference style) + design 1 clothing.
+const base = GUY_LOOKS[0].look;
+export const MAIN_GUY: GuyLook = { ...base, hair: "#1f1d1e", hairStyle: "sidePart", flatHair: true };
+export const MAIN_GUY_GLASSES: GuyLook = { ...MAIN_GUY, glasses: true };

@@ -5,6 +5,7 @@ import { PhoneScroll } from "./cuts/phoneScroll/PhoneScroll";
 import timeline from "./timeline.json";
 import { TypingScene } from "./TypingScene";
 import { CharacterSheet, SHEET_H, SHEET_W } from "./cuts/characterSheet/CharacterSheet";
+import { CharacterPick, PICK_H, PICK_W } from "./cuts/characterSheet/CharacterPick";
 
 export const RemotionRoot: React.FC = () => (
   <>
@@ -25,5 +26,6 @@ export const RemotionRoot: React.FC = () => (
       height={1080}
     />
     <Composition id="CharacterSheet" component={CharacterSheet} durationInFrames={1} fps={30} width={SHEET_W} height={SHEET_H} />
+    <Composition id="CharacterPick" component={CharacterPick} durationInFrames={1} fps={30} width={PICK_W} height={PICK_H} />
   </>
 );

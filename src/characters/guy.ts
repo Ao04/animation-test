@@ -32,6 +32,8 @@ export interface GuyLook {
   sole: string;
   glasses?: boolean;
   stubble?: boolean;
+  nose?: boolean; // small nose hook on the face edge (off by default, like the reference style)
+  flatHair?: boolean; // one flat colour, no strands or sheen (reference style)
 }
 
 type Xf = (p: Pt) => Pt;
@@ -314,20 +316,8 @@ export const drawGuyUpper = (ctx: Ctx, pose: Pose, L: GuyLook) => {
   // neck (thicker than the girl's)
   const nb = T([20, -246]);
   const nt = R.head([6, -30]);
-  tubes(ctx, [{ pts: [nb, nt], w: 42 }], L.skin);
-  ctx.save();
-  ctx.strokeStyle = L.skinShade;
-  ctx.lineWidth = 16;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  const a = R.head([-6, -26]);
-  const b = T([10, -248]);
-  ctx.moveTo(a[0], a[1]);
-  ctx.lineTo(b[0], b[1]);
-  ctx.stroke();
-  ctx.restore();
-  // collar over the neck base
-  if (L.top === "hoodie") curve(ctx, [T([10, -260]), T([28, -248]), T([40, -252])], { lw: 3, seed: 406 });
+  // plain neck: no shading or lines on its front (nothing that reads as an Adam's apple)
+  tubes(ctx, [{ pts: [nb, nt], w: 40 }], L.skin);
 
   drawHead(ctx, pose, R, L);
 
@@ -464,28 +454,24 @@ const HAIR: Record<HairStyle, HairDef> = {
   },
   // 4. neat side part (pairs with glasses)
   sidePart: {
-    from: deg(142),
-    to: deg(320),
-    vol: (u) => 6 + 7 * Math.sin(Math.PI * u),
+    from: deg(144),
+    to: deg(318),
+    vol: (u) => 5 + 6 * Math.sin(Math.PI * Math.min(1, u * 1.1)),
     hairline: [
-      [58, -54],
-      [48, -44],
-      [34, -46],
-      [20, -46],
-      [8, -34],
-      [0, -14],
-      [-2, 12],
-      [-12, 12],
-      [-14, -8],
-      [-30, -12],
-      [-46, -4],
-      [-54, 28],
-      [-60, 40],
+      [66, -60],
+      [52, -50],
+      [36, -42],
+      [20, -34],
+      [8, -22],
+      [1, -6],
+      [2, 6],
+      [-4, -12],
+      [-18, -19],
+      [-34, -15],
+      [-44, 0],
+      [-54, 26],
+      [-60, 38],
     ],
-    detail: (ctx, P) => {
-      curve(ctx, [P([-24, -86]), P([10, -88]), P([40, -78])], { lw: 2.4, seed: 871, color: "rgba(0,0,0,0.55)" });
-      curve(ctx, [P([14, -80]), P([36, -66]), P([50, -50])], { lw: 2.2, seed: 872, color: "rgba(255,235,215,0.14)" });
-    },
   },
   // 5. two-block: very short faded sides, textured top
   twoBlock: {
@@ -534,20 +520,20 @@ const drawHair = (ctx: Ctx, P: Xf, L: GuyLook) => {
   }
   const shape = [...outer, ...def.hairline.map(P)];
 
-  // draw on a scratch layer so style details can use source-atop safely
-  const prev = ctx.globalCompositeOperation;
+  // fill, then keep details inside the hair shape
   ctx.save();
   ctx.fillStyle = L.hair;
   ctx.beginPath();
   spline(ctx, shape, true, 0.7);
   ctx.fill();
   ctx.clip();
-  ctx.globalCompositeOperation = prev;
-  // crown sheen
-  ctx.filter = "blur(3px)";
-  curve(ctx, [P([-50, -70]), P([-16, -94]), P([24, -96])], { lw: 10, color: "rgba(255,240,225,0.10)", seed: 811, amp: 0.2 });
-  ctx.filter = "none";
-  def.detail?.(ctx, P, L);
+  if (!L.flatHair) {
+    // crown sheen
+    ctx.filter = "blur(3px)";
+    curve(ctx, [P([-50, -70]), P([-16, -94]), P([24, -96])], { lw: 10, color: "rgba(255,240,225,0.10)", seed: 811, amp: 0.2 });
+    ctx.filter = "none";
+    def.detail?.(ctx, P, L);
+  }
   ctx.restore();
 
   ctx.beginPath();
@@ -602,8 +588,7 @@ const drawHead = (ctx: Ctx, pose: Pose, R: Rig, L: GuyLook) => {
   const by = -18 - pose.brow * 3.5;
   curve(ctx, [P([31, by + 1]), P([46, by - 1.5]), P([62, by + 1])], { lw: 5.6, seed: 704, amp: 0.2 });
 
-  // hint of a nose on the front edge
-  curve(ctx, [P([70, 14]), P([75, 27]), P([68, 30])], { lw: 3, seed: 706, amp: 0.1 });
+  if (L.nose) curve(ctx, [P([70, 14]), P([75, 27]), P([68, 30])], { lw: 3, seed: 706, amp: 0.1 });
 
   // mouth
   const s = pose.smile;
