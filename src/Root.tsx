@@ -6,6 +6,7 @@ import timeline from "./timeline.json";
 import { TypingScene } from "./TypingScene";
 import { CharacterSheet, SHEET_H, SHEET_W } from "./cuts/characterSheet/CharacterSheet";
 import { CharacterPick, PICK_H, PICK_W } from "./cuts/characterSheet/CharacterPick";
+import { ROUND_H, ROUND_W, RoundGuySheet } from "./cuts/characterSheet/RoundGuySheet";
 
 export const RemotionRoot: React.FC = () => (
   <>
@@ -27,5 +28,6 @@ export const RemotionRoot: React.FC = () => (
     />
     <Composition id="CharacterSheet" component={CharacterSheet} durationInFrames={1} fps={30} width={SHEET_W} height={SHEET_H} />
     <Composition id="CharacterPick" component={CharacterPick} durationInFrames={1} fps={30} width={PICK_W} height={PICK_H} />
+    <Composition id="RoundGuySheet" component={RoundGuySheet} durationInFrames={1} fps={30} width={ROUND_W} height={ROUND_H} />
   </>
 );

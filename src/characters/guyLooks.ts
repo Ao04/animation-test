@@ -97,3 +97,13 @@ export const GUY_LOOKS: { id: string; look: GuyLook }[] = [
 const base = GUY_LOOKS[0].look;
 export const MAIN_GUY: GuyLook = { ...base, hair: "#1f1d1e", hairStyle: "sidePart", flatHair: true };
 export const MAIN_GUY_GLASSES: GuyLook = { ...MAIN_GUY, glasses: true };
+
+// Round doodle head (reference style): white skin everywhere so the head
+// doesn't read as a mask; design 1 clothing.
+export const ROUND_GUY: GuyLook = {
+  ...base,
+  skin: "#f4f1ea",
+  skinShade: "#dcd6cb",
+  skinFar: "#cfc8bc",
+  head: "round",
+};

@@ -34,7 +34,34 @@ export interface GuyLook {
   stubble?: boolean;
   nose?: boolean; // small nose hook on the face edge (off by default, like the reference style)
   flatHair?: boolean; // one flat colour, no strands or sheen (reference style)
+  head?: "default" | "round"; // "round": big round doodle head, no hair or ears
+  expr?: Expr; // expression for the round head
 }
+
+/**
+ * Round-head expression, all numeric so expressions can blend over time.
+ * Positions are in the head's local space (radius 92, facing right).
+ */
+export interface Expr {
+  lid: number; // upper lid: 0 wide open .. 1 closed (0.32 = the deadpan half-lid)
+  browUp: number; // px, both brows
+  farBrowAngry: number; // 0..1 tilts the far brow down towards the nose
+  mouthWidth: number; // 0..1.2 of the default line
+  mouthCurve: number; // + smile (ends up), - frown
+  mouthSkew: number; // + raises the far corner (smirk)
+  mouthOpen: number; // 0..1 open "D" smile
+  mouthO: number; // 0..1 small round "o"
+  pupilX: number; // extra pupil offset (px)
+  pupilY: number;
+}
+
+export const EXPR: Record<"deadpan" | "grin" | "smirk" | "suspicious" | "surprised", Expr> = {
+  deadpan: { lid: 0.32, browUp: 0, farBrowAngry: 0, mouthWidth: 1, mouthCurve: 0, mouthSkew: 0, mouthOpen: 0, mouthO: 0, pupilX: 0, pupilY: 0 },
+  grin: { lid: 0.32, browUp: 0, farBrowAngry: 0, mouthWidth: 0.55, mouthCurve: 0, mouthSkew: 0, mouthOpen: 1, mouthO: 0, pupilX: 0, pupilY: 0 },
+  smirk: { lid: 0.36, browUp: 0, farBrowAngry: 0, mouthWidth: 0.75, mouthCurve: 0.8, mouthSkew: 0.5, mouthOpen: 0, mouthO: 0, pupilX: 0, pupilY: 0 },
+  suspicious: { lid: 0.34, browUp: 0, farBrowAngry: 1, mouthWidth: 0.5, mouthCurve: 0, mouthSkew: 0.15, mouthOpen: 0, mouthO: 0, pupilX: 0, pupilY: 0 },
+  surprised: { lid: 0.06, browUp: 7, farBrowAngry: 0, mouthWidth: 0, mouthCurve: 0, mouthSkew: 0, mouthOpen: 0, mouthO: 1, pupilX: -6, pupilY: 6 },
+};
 
 type Xf = (p: Pt) => Pt;
 const frame = (o: Pt, a: number, s = 1): Xf => (p) => add(o, rot([p[0] * s, p[1] * s], a));
@@ -317,9 +344,10 @@ export const drawGuyUpper = (ctx: Ctx, pose: Pose, L: GuyLook) => {
   const nb = T([20, -246]);
   const nt = R.head([6, -30]);
   // plain neck: no shading or lines on its front (nothing that reads as an Adam's apple)
-  tubes(ctx, [{ pts: [nb, nt], w: 40 }], L.skin);
+  tubes(ctx, [{ pts: [nb, nt], w: L.head === "round" ? 30 : 40 }], L.skin);
 
-  drawHead(ctx, pose, R, L);
+  if (L.head === "round") drawRoundHead(ctx, pose, R, L);
+  else drawHead(ctx, pose, R, L);
 
   drawArm(ctx, shoulderNear, add(NEAR_WRIST, [pose.near.dx, pose.near.dy]), pose.near, { sleeve: L.main, sleeveShade: L.shade, skin: L.skin, skinFar: L.skinShade }, 600, ribbed);
 };
@@ -611,3 +639,119 @@ const drawHead = (ctx: Ctx, pose: Pose, R: Rig, L: GuyLook) => {
     curve(ctx, [P([63, 0]), P([72, -2])], { lw: 3.2, seed: 741, amp: 0.1 });
   }
 };
+
+// ---------------------------------------------------------------------------
+// Round doodle head: big circle, flat-topped half-lid eyes with small pupils,
+// thick brows, a single-line mouth. Seen three-quarters, looking right.
+// ---------------------------------------------------------------------------
+
+const ROUND_C: Pt = [10, -98];
+const ROUND_R = 92;
+
+const drawRoundHead = (ctx: Ctx, pose: Pose, R: Rig, L: GuyLook) => {
+  const e = L.expr ?? EXPR.deadpan;
+  const P: Xf = (p) => R.head([p[0] + ROUND_C[0], p[1] + ROUND_C[1]]);
+  const lw = penStyle.lw;
+
+  // head
+  const ring: Pt[] = [];
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * Math.PI * 2;
+    ring.push(P([Math.cos(a) * ROUND_R, Math.sin(a) * ROUND_R]));
+  }
+  blob(ctx, ring, { fill: L.skin, seed: 901, amp: 0.5 });
+  // a second, lighter pass on the far side: the sketchy double line of the reference
+  const arc: Pt[] = [];
+  for (let i = 0; i <= 6; i++) {
+    const a = -1.25 + i * 0.32;
+    arc.push(P([Math.cos(a) * (ROUND_R - 4), Math.sin(a) * (ROUND_R - 4)]));
+  }
+  curve(ctx, arc, { lw: lw * 0.45, seed: 902, amp: 0.4 });
+
+  // eyes: near (bigger) and far (near the face edge)
+  const blinkLid = Math.max(e.lid, pose.blink);
+  const eye = (c: Pt, rx: number, ry: number, pupil: Pt, seed: number) => {
+    const top = c[1] - ry;
+    const lidY = top + 2 * ry * Math.min(0.94, blinkLid);
+    const pts: Pt[] = [];
+    // ellipse part below the lid line
+    const sAng = Math.asin(Math.max(-1, Math.min(1, (lidY - c[1]) / ry)));
+    const a0 = sAng;
+    const a1 = Math.PI - sAng;
+    for (let i = 0; i <= 16; i++) {
+      const a = lerp(a0, a1, i / 16);
+      pts.push([c[0] + Math.cos(a) * rx, c[1] + Math.sin(a) * ry]);
+    }
+    const shape = pts.map(P);
+    if (blinkLid > 0.9) {
+      curve(ctx, shape, { lw: lw * 0.9, seed, amp: 0.2 });
+      return;
+    }
+    ctx.save();
+    ctx.beginPath();
+    spline(ctx, shape, true, 0.4);
+    ctx.fillStyle = "#fbfaf6";
+    ctx.fill();
+    ctx.clip();
+    // pupil: rides up against the lid, looking right
+    const pr = 6.5;
+    const pc = P([pupil[0] + e.pupilX + pose.gazeX, Math.max(lidY + pr * 0.7, pupil[1] + e.pupilY + pose.gazeY)]);
+    ctx.fillStyle = penStyle.ink;
+    ctx.beginPath();
+    ctx.arc(pc[0], pc[1], pr * HEAD_SCALE, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    ctx.beginPath();
+    spline(ctx, shape, true, 0.4);
+    ctx.strokeStyle = penStyle.ink;
+    ctx.lineWidth = lw * 0.9;
+    ctx.lineJoin = "round";
+    ctx.stroke();
+  };
+  eye([-36, -2], 27, 19, [-17, -6], 910);
+  eye([46, -16], 25, 18, [64, -20], 911);
+
+  // brows (thick, slightly overlapping the eye tops)
+  const bu = e.browUp;
+  curve(ctx, [P([-66, -22 - bu]), P([-36, -27 - bu]), P([-8, -31 - bu])], { lw: lw * 1.25, seed: 920, amp: 0.2 });
+  const ang = e.farBrowAngry;
+  curve(
+    ctx,
+    [P([20, -38 - bu + ang * 10]), P([48, -42 - bu - ang * 2]), P([78, -48 - bu - ang * 8])],
+    { lw: lw * 1.25, seed: 921, amp: 0.2 },
+  );
+
+  // mouth: a line from m0 to m1 (rises to the right, like the reference)
+  const mid: Pt = [4, 30];
+  const half: Pt = [32, -7];
+  const w = e.mouthWidth;
+  const m0: Pt = [mid[0] - half[0] * w, mid[1] - half[1] * w + e.mouthCurve * -6];
+  const m1: Pt = [mid[0] + half[0] * w, mid[1] + half[1] * w + e.mouthCurve * -6 - e.mouthSkew * 10];
+  const mm: Pt = [mid[0], mid[1] + e.mouthCurve * 4];
+  if (e.mouthO > 0.5) {
+    const c = P([mid[0] + 2, mid[1] + 2]);
+    ctx.save();
+    ctx.translate(c[0], c[1]);
+    ctx.rotate(R.headAngle - 0.2);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 8 * e.mouthO * HEAD_SCALE, 11 * e.mouthO * HEAD_SCALE, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "#fbfaf6";
+    ctx.fill();
+    ctx.strokeStyle = penStyle.ink;
+    ctx.lineWidth = lw * 0.9;
+    ctx.stroke();
+    ctx.restore();
+  } else if (e.mouthOpen > 0.05) {
+    // open "D" smile: straight top edge, round bottom
+    const o = e.mouthOpen;
+    const top0: Pt = [m0[0], m0[1] - 2];
+    const top1: Pt = [m1[0], m1[1] - 2];
+    const shape = ([top0, [lerp(top0[0], top1[0], 0.5), lerp(top0[1], top1[1], 0.5) - 1] as Pt, top1, [m1[0] - 6, m1[1] + 12 * o], [mid[0], mid[1] + 18 * o], [m0[0] + 6, m0[1] + 12 * o]] as Pt[]).map(P);
+    blob(ctx, shape, { fill: "#fbfaf6", seed: 930, amp: 0.2, lw: lw * 0.9 });
+  } else if (w > 0.02) {
+    curve(ctx, [m0, mm, m1].map(P), { lw: lw * 0.9, seed: 931, amp: 0.2 });
+  }
+};
+
+/** World position of the round head's centre (for framing close-ups). */
+export const roundHeadCenter = (pose: Pose): Pt => rig(pose).head(ROUND_C);
